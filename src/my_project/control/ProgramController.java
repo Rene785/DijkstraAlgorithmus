@@ -26,6 +26,7 @@ public class ProgramController {
     private double length;
     private Vertex end;
     private int amountOfUnmarkedVertices;
+    private int amountOfNonChanged;
 
     // Referenzen
     private ViewController viewController;  // diese Referenz soll auf ein Objekt der Klasse viewController zeigen. Über dieses Objekt wird das Fenster gesteuert.
@@ -139,6 +140,7 @@ public class ProgramController {
                 list.append(tmp);
             }
             amountOfUnmarkedVertices++;
+            amountOfNonChanged=amountOfUnmarkedVertices;
             vertexList.next();
         }
         System.out.println("Die Liste mit Dijkstra-Objekten wurde gefüllt");
@@ -159,12 +161,16 @@ public class ProgramController {
         while(neigborhood.hasAccess()) {
             //bringe Zeiger auf jew Objekt in Liste
             search(neigborhood.getContent());
-            if(list.getContent()!=firstDO) {
+            if (list.getContent() != firstDO) {
                 //prüfe, ob über das aktuel erste Objekt in der Liste die Entfernung zum Start geringer ist, als vorher
                 double newDistance = graph.getEdge(list.getContent().getThisOne(), firstDO.getThisOne()).getWeight()
                         + firstDO.getDistanceToStart();
                 if (list.getContent().getDistanceToStart() > newDistance) {
                     System.out.println("previosus wird verändert");
+
+                    if(list.getContent()!=list.getContent().getPrevious()){
+                        amountOfNonChanged--;
+                    }
 
                     list.getContent().setDistanceToStart(newDistance);
                     list.getContent().setPrevious(list.getContent());
@@ -176,8 +182,8 @@ public class ProgramController {
                     list.remove();
                     addToSortedList(actual);
                 }
-            }
-            neigborhood.next();
+        }
+        neigborhood.next();
 
         }
         System.out.println("Nachbarn wurden geprüft");
@@ -192,7 +198,7 @@ public class ProgramController {
         list.toFirst();
         firstDO=list.getContent();
         boolean recursion=true;
-        if(list.getContent().getThisOne()==end ){//Falls das neue aktuelle Objekt,
+        if(list.getContent().getThisOne()==end &&amountOfNonChanged==0 ){//Falls das neue aktuelle Objekt,
             // das Objekt am Ende ist, wurde das Ziel erreicht
             // und die anderen Wege sind länger und können daher nicht mehr kürzer werden.
             recursion=false;
@@ -224,12 +230,18 @@ public class ProgramController {
         list.toFirst();
         boolean search =true;
         while(list.hasAccess()&&search){
-            if((dO.getThisOne().isMarked() && !list.getContent().getThisOne().isMarked())
-                    &&dO.getDistanceToStart()>=list.getContent().getDistanceToStart()){
-                list.next();
+            if(!dO.getThisOne().isMarked() && list.getContent().getThisOne().isMarked()){
+                list.insert(dO);
+                search=false;
+            }else if(dO.getThisOne().isMarked()==list.getContent().getThisOne().isMarked()){
+                if(dO.getDistanceToStart()<=list.getContent().getDistanceToStart()){
+                    list.insert(dO);
+                    search=false;
+                }else{
+                    list.next();
+                }
             }else{
-                 list.insert(dO);
-                 search=false;
+                list.next();
             }
         }
     }
